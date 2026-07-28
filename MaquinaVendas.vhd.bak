@@ -1,0 +1,139 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity MaquinaVendas is
+    port(
+        clock    : in  STD_LOGIC;
+        A        : in  STD_LOGIC_VECTOR(1 downto 0);
+        Produto  : out STD_LOGIC;
+        Troco25  : out STD_LOGIC;
+        Troco50  : out STD_LOGIC
+    );
+end entity MaquinaVendas;
+
+architecture maquinaEstados_arch of MaquinaVendas is
+    type estado is ( -- Estados da maquina
+        S0,
+        S25,
+        S50,
+        S75,
+        CANCEL25,
+        CANCEL50,
+        CANCEL75,
+        VENDA100,
+        VENDA125
+    );
+    -- significa que quando a simulacao comecar, ambas ja iniciam no estado S0 (no tempo 0 vai estar no S0)
+    signal currentState : estado := S0; -- que comecam com 0 por conta do :=, eh um tipo de inicializacao
+    signal nextState    : estado := S0; -- variaveis do tipo estado
+
+begin
+    sync_proc : process(clock) -- Processo sincrono (registrador de estados)
+    begin
+        if rising_edge(clock) then
+            currentState <= nextState;
+        end if;
+    end process sync_proc;
+
+    comb_proc : process(currentState, A) -- Processo combinacional
+    begin
+        -- saidas padrao
+        Produto <= '0';
+        Troco25 <= '0';
+        Troco50 <= '0';
+
+        case currentState is
+
+            when S0 => -- Estado inicial
+                case A is
+                    when "00" =>
+                        nextState <= S0;
+                    when "01" =>
+                        nextState <= S25;
+                    when "10" =>
+                        nextState <= S50;
+                    when others =>
+                        nextState <= S0;
+                end case;
+
+            when S25 => -- 25 centavos
+                case A is
+                    when "00" =>
+                        nextState <= S25;
+                    when "01" =>
+                        nextState <= S50;
+                    when "10" =>
+                        nextState <= S75;
+                    when others =>
+                        nextState <= CANCEL25;
+                end case;
+
+            when S50 => -- 50 centavos
+                case A is
+                    when "00" =>
+                        nextState <= S50;
+                    when "01" =>
+                        nextState <= S75;
+                    when "10" =>
+                        nextState <= VENDA100;
+                    when others =>
+                        nextState <= CANCEL50;
+                end case;
+
+            when S75 => -- 75 centavos
+                case A is
+                    when "00" =>
+                        nextState <= S75;
+                    when "01" =>
+                        nextState <= VENDA100;
+                    when "10" =>
+                        nextState <= VENDA125;
+                    when others =>
+                        nextState <= CANCEL75;
+                end case;
+
+            when CANCEL25 => -- Cancelamento com devolucao de 25
+                Troco25 <= '1';
+                if A = "00" then
+                    nextState <= S0;
+                else
+                    nextState <= CANCEL25;
+                end if;
+
+            when CANCEL50 => -- Cancelamento com devolucao de 50
+                Troco50 <= '1';
+                if A = "00" then
+                    nextState <= S0;
+                else
+                    nextState <= CANCEL50;
+                end if;
+
+            when CANCEL75 => -- Cancelamento com devolucao de 75
+                Troco25 <= '1';
+                Troco50 <= '1';
+                if A = "00" then
+                    nextState <= S0;
+                else
+                    nextState <= CANCEL75;
+                end if;
+
+            when VENDA100 => -- Venda exata (R$1,00)
+                Produto <= '1';
+                if A = "00" then
+                    nextState <= S0;
+                else
+                    nextState <= VENDA100;
+                end if;
+
+            when VENDA125 => -- Venda com troco de 25
+                Produto <= '1';
+                Troco25 <= '1';
+                if A = "00" then
+                    nextState <= S0;
+                else
+                    nextState <= VENDA125;
+                end if;
+                
+        end case;
+    end process comb_proc;
+end architecture maquinaEstados_arch;
