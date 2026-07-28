@@ -1,0 +1,20 @@
+# Arquivos de backup
+*.bak
+
+# Arquivos temporários
+*.tmp
+*.log
+
+# ModelSim
+transcript
+vsim.wlf
+*.wlf
+work/
+
+# Quartus
+db/
+incremental_db/
+output_files/
+
+# VS Code (opcional)
+.vscode/
