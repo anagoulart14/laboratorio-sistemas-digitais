@@ -1,10 +1,6 @@
 # laboratorio-sistemas-digitais
 Repositório destinado ao armazenamento dos códigos em VHDL, simulações e relatórios desenvolvidos na disciplina de Laboratório de Sistemas Digitais.
-# Tecnologias
-
-- VHDL
-- ModelSim
-- Quartus Prime
+Foi usado para produzir códigos e simulações de circuitos: ModelSim e LogiSim.
 
 # Experimentos
 
